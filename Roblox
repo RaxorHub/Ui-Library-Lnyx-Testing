@@ -363,7 +363,7 @@ function Library:CreateWindow(config)
         BackgroundColor3 = colors.bg3,
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        Text = "â”€",
+        Text = "-",
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.subtitle,
         TextColor3 = colors.textDim,
@@ -428,7 +428,7 @@ function Library:CreateWindow(config)
         BackgroundColor3 = colors.bg3,
         BackgroundTransparency = 0,
         BorderSizePixel = 0,
-        Text = "â‹°",
+        Text = "ON",
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.small,
         TextColor3 = colors.textDim,
@@ -723,7 +723,7 @@ function Library:CreateCategory(parent, title)
     
     local arrow = new("TextLabel", {
         Parent = header,
-        Text = "â–¼",
+        Text = "v",
         Size = UDim2.new(0, 20, 1, 0),
         Position = UDim2.new(1, -25, 0, 0),
         BackgroundTransparency = 1,
