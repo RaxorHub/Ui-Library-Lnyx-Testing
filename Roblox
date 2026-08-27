@@ -23,9 +23,9 @@ local localPlayer = Players.LocalPlayer
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 local colors = {
-    primary = Color3.fromRGB(255, 140, 0),
-    secondary = Color3.fromRGB(147, 112, 219),
-    accent = Color3.fromRGB(186, 85, 211),
+    primary = Color3.fromRGB(138, 78, 215),
+    secondary = Color3.fromRGB(110, 55, 180),
+    accent = Color3.fromRGB(165, 105, 235),
     success = Color3.fromRGB(34, 197, 94),
     bg1 = Color3.fromRGB(18, 18, 18),
     bg2 = Color3.fromRGB(28, 28, 28),
