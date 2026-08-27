@@ -11,7 +11,6 @@ Library._pageTitle = nil
 Library._navContainer = nil
 Library._connections = {}
 Library._spawns = {}
-Library._searchRegistry = {}
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -24,9 +23,9 @@ local localPlayer = Players.LocalPlayer
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 local colors = {
-    primary = Color3.fromRGB(138, 78, 215),
-    secondary = Color3.fromRGB(110, 55, 180),
-    accent = Color3.fromRGB(165, 105, 235),
+    primary = Color3.fromRGB(255, 140, 0),
+    secondary = Color3.fromRGB(147, 112, 219),
+    accent = Color3.fromRGB(186, 85, 211),
     success = Color3.fromRGB(34, 197, 94),
     bg1 = Color3.fromRGB(18, 18, 18),
     bg2 = Color3.fromRGB(28, 28, 28),
@@ -410,7 +409,7 @@ function Library:CreateWindow(config)
     self._pageTitle = new("TextLabel", {
         Parent = topBar,
         Text = "Dashboard",
-        Size = UDim2.new(1, -44, 1, 0),
+        Size = UDim2.new(1, -16, 1, 0),
         Position = UDim2.new(0, 10, 0, 0),
         Font = Enum.Font.GothamBold,
         TextSize = fontSize.header,
@@ -419,229 +418,8 @@ function Library:CreateWindow(config)
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 6
     })
-
-    -- ── Search Bar UI ────────────────────────────────────────────────
-    local _searchBtn = new("TextButton", {
-        Parent = topBar,
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(1, -27, 0.5, -11),
-        BackgroundColor3 = colors.bg3,
-        BackgroundTransparency = 0.3,
-        BorderSizePixel = 0,
-        Text = "⌕",
-        TextSize = 14,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = colors.textDim,
-        AutoButtonColor = false,
-        ZIndex = 7,
-        Name = "SearchBtn"
-    })
-    new("UICorner", {Parent = _searchBtn, CornerRadius = UDim.new(0, 5)})
-
-    local _searchBox = new("TextBox", {
-        Parent = topBar,
-        Size = UDim2.new(1, -36, 1, -6),
-        Position = UDim2.new(0, 6, 0.5, -12),
-        PlaceholderText = "Cari fitur...",
-        Text = "",
-        Font = Enum.Font.GothamBold,
-        TextSize = fontSize.small,
-        TextColor3 = colors.text,
-        PlaceholderColor3 = colors.textDimmer,
-        BackgroundColor3 = colors.bg3,
-        BackgroundTransparency = 0.3,
-        BorderSizePixel = 0,
-        Visible = false,
-        ClearTextOnFocus = false,
-        ZIndex = 7,
-        Name = "SearchBox"
-    })
-    new("UICorner", {Parent = _searchBox, CornerRadius = UDim.new(0, 5)})
-    new("UIPadding", {Parent = _searchBox, PaddingLeft = UDim.new(0, 7)})
-    new("UIStroke", {Parent = _searchBox, Color = colors.primary, Thickness = 1, Transparency = 0.6})
-
-    local _closeSearchBtn = new("TextButton", {
-        Parent = topBar,
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(1, -27, 0.5, -11),
-        BackgroundTransparency = 1,
-        Text = "✕",
-        TextSize = 11,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = colors.textDim,
-        AutoButtonColor = false,
-        Visible = false,
-        ZIndex = 8,
-        Name = "CloseSearchBtn"
-    })
-
-    -- Search results overlay (sits on top of page content)
-    local _searchResultsFrame = new("Frame", {
-        Parent = self._contentBg,
-        Size = UDim2.new(1, -12, 1, -38),
-        Position = UDim2.new(0, 6, 0, 36),
-        BackgroundColor3 = colors.bg1,
-        BackgroundTransparency = 0.05,
-        BorderSizePixel = 0,
-        Visible = false,
-        ClipsDescendants = true,
-        ZIndex = 10,
-        Name = "SearchResultsFrame"
-    })
-    new("UICorner", {Parent = _searchResultsFrame, CornerRadius = UDim.new(0, 6)})
-    new("UIStroke", {Parent = _searchResultsFrame, Color = colors.border, Thickness = 1, Transparency = 0.4})
-
-    local _searchScroll = new("ScrollingFrame", {
-        Parent = _searchResultsFrame,
-        Size = UDim2.new(1, -8, 1, -8),
-        Position = UDim2.new(0, 4, 0, 4),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 2,
-        ScrollBarImageColor3 = colors.primary,
-        ScrollBarImageTransparency = 0.5,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y,
-        ScrollingDirection = Enum.ScrollingDirection.Y,
-        ClipsDescendants = true,
-        ZIndex = 11
-    })
-    new("UIListLayout", {Parent = _searchScroll, Padding = UDim.new(0, 3), SortOrder = Enum.SortOrder.LayoutOrder})
-    new("UIPadding", {Parent = _searchScroll, PaddingTop = UDim.new(0, 3), PaddingBottom = UDim.new(0, 3), PaddingLeft = UDim.new(0, 2), PaddingRight = UDim.new(0, 2)})
-
-    local function _clearSearchResults()
-        for _, child in ipairs(_searchScroll:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextLabel") then
-                child:Destroy()
-            end
-        end
-    end
-
-    local function _openSearch()
-        self._pageTitle.Visible = false
-        _searchBtn.Visible = false
-        _searchBox.Visible = true
-        _closeSearchBtn.Visible = true
-        _searchResultsFrame.Visible = true
-        _clearSearchResults()
-        task.defer(function()
-            pcall(function() _searchBox:CaptureFocus() end)
-        end)
-    end
-
-    local function _closeSearch()
-        self._pageTitle.Visible = true
-        _searchBtn.Visible = true
-        _searchBox.Visible = false
-        _closeSearchBtn.Visible = false
-        _searchResultsFrame.Visible = false
-        _searchBox.Text = ""
-        _clearSearchResults()
-    end
-
-    local function _performSearch(query)
-        _clearSearchResults()
-        query = query:lower():gsub("^%s*(.-)%s*$", "%1")
-        if query == "" then return end
-
-        local found = {}
-        for _, entry in ipairs(self._searchRegistry) do
-            if entry.label:lower():find(query, 1, true) then
-                table.insert(found, entry)
-            end
-        end
-
-        if #found == 0 then
-            new("TextLabel", {
-                Parent = _searchScroll,
-                Text = 'Tidak ditemukan: "' .. query .. '"',
-                Size = UDim2.new(1, 0, 0, 40),
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                TextSize = fontSize.small,
-                TextColor3 = colors.textDimmer,
-                TextXAlignment = Enum.TextXAlignment.Center,
-                ZIndex = 12
-            })
-            return
-        end
-
-        for i, entry in ipairs(found) do
-            local rFrame = new("Frame", {
-                Parent = _searchScroll,
-                Size = UDim2.new(1, 0, 0, 40),
-                BackgroundColor3 = colors.bg2,
-                BackgroundTransparency = 0.3,
-                BorderSizePixel = 0,
-                LayoutOrder = i,
-                ZIndex = 12
-            })
-            new("UICorner", {Parent = rFrame, CornerRadius = UDim.new(0, 6)})
-
-            new("TextLabel", {
-                Parent = rFrame,
-                Text = entry.label,
-                Size = UDim2.new(1, -16, 0, 20),
-                Position = UDim2.new(0, 8, 0, 3),
-                BackgroundTransparency = 1,
-                Font = Enum.Font.GothamBold,
-                TextSize = fontSize.small,
-                TextColor3 = colors.text,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                TextTruncate = Enum.TextTruncate.AtEnd,
-                ZIndex = 13
-            })
-
-            new("TextLabel", {
-                Parent = rFrame,
-                Text = "📌 " .. entry.tab .. "  ›  " .. entry.section,
-                Size = UDim2.new(1, -16, 0, 14),
-                Position = UDim2.new(0, 8, 0, 23),
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                TextSize = 9,
-                TextColor3 = colors.primary,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                ZIndex = 13
-            })
-
-            local rBtn = new("TextButton", {
-                Parent = rFrame,
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1,
-                Text = "",
-                ZIndex = 14
-            })
-
-            local capturedEntry = entry
-            rBtn.MouseButton1Click:Connect(function()
-                _closeSearch()
-                self:_switchPage(capturedEntry.tab)
-            end)
-            rBtn.Activated:Connect(function()
-                _closeSearch()
-                self:_switchPage(capturedEntry.tab)
-            end)
-
-            rFrame.MouseEnter:Connect(function()
-                TweenService:Create(rFrame, TweenInfo.new(0.1), {BackgroundTransparency = 0.1}):Play()
-            end)
-            rFrame.MouseLeave:Connect(function()
-                TweenService:Create(rFrame, TweenInfo.new(0.1), {BackgroundTransparency = 0.3}):Play()
-            end)
-        end
-    end
-
-    _searchBtn.MouseButton1Click:Connect(_openSearch)
-    _searchBtn.Activated:Connect(_openSearch)
-    _closeSearchBtn.MouseButton1Click:Connect(_closeSearch)
-    _closeSearchBtn.Activated:Connect(_closeSearch)
-    _searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-        _performSearch(_searchBox.Text)
-    end)
-    -- ── End Search Bar ───────────────────────────────────────────────
-
-
+    
+    
     local minimized = false
     local icon = nil
     local savedIconPos = UDim2.new(0, 20, 0, 100)
@@ -2405,8 +2183,6 @@ function Library:Window(config)
             SectionObject._container = category
             SectionObject._library = self._library
             SectionObject._layoutOrder = 0
-            SectionObject._tabName = tabName
-            SectionObject._sectionTitle = sectionTitle
             
             local function getNextLayoutOrder()
                 SectionObject._layoutOrder = SectionObject._layoutOrder + 1
@@ -2423,7 +2199,6 @@ function Library:Window(config)
                 
                 local frame = self._library:CreateToggle(self._container, title, configPath, callback, noSave, default)
                 if frame then frame.LayoutOrder = getNextLayoutOrder() end
-                table.insert(self._library._searchRegistry, {label = title, tab = self._tabName, section = self._sectionTitle, kind = "Toggle"})
                 
                 local toggleObj = {
                     _value = default,
@@ -2448,7 +2223,6 @@ function Library:Window(config)
                 local isMulti = dropdownConfig.Multi or false
                 local configPath = noSave and nil or ((isMulti and "MultiDropdowns." or "Dropdowns.") .. title:gsub("%s+", "_"))
                 local uniqueId = title:gsub("%s+", "_")
-                table.insert(self._library._searchRegistry, {label = title, tab = self._tabName, section = self._sectionTitle, kind = "Dropdown"})
                 
                 if isMulti then
                     local frame = self._library:CreateMultiDropdown(self._container, title, nil, options, configPath, callback, uniqueId)
@@ -2527,7 +2301,6 @@ function Library:Window(config)
                 local callback = inputConfig.Callback
                 local noSave = inputConfig.NoSave or false
                 local configPath = noSave and nil or ("Inputs." .. title:gsub("%s+", "_"))
-                table.insert(self._library._searchRegistry, {label = title, tab = self._tabName, section = self._sectionTitle, kind = "Input"})
                 
                 if placeholder ~= "" then
                     local textBoxObj = self._library:CreateTextBox(self._container, title, placeholder, configPath, default, callback)
@@ -2562,7 +2335,6 @@ function Library:Window(config)
                 
                 local frame = self._library:CreateButton(self._container, title, callback)
                 if frame then frame.LayoutOrder = getNextLayoutOrder() end
-                table.insert(self._library._searchRegistry, {label = title, tab = self._tabName, section = self._sectionTitle, kind = "Button"})
             end
             
             function SectionObject:AddParagraph(paragraphConfig)
@@ -2637,33 +2409,7 @@ function Library:Window(config)
                 
                 return paragraphObj
             end
-
-            function SectionObject:AddSlider(sliderConfig)
-                sliderConfig = sliderConfig or {}
-                local title    = sliderConfig.Title    or "Slider"
-                local slMin    = sliderConfig.Min      or 0
-                local slMax    = sliderConfig.Max      or 100
-                local slStep   = sliderConfig.Step     or 1
-                local default  = sliderConfig.Default  or slMin
-                local callback = sliderConfig.Callback
-                local noSave   = sliderConfig.NoSave   or false
-                local configPath = noSave and nil or ("Sliders." .. title:gsub("%s+", "_"))
-
-                local sliderApi = self._library:CreateSlider(self._container, title, {
-                    min        = slMin,
-                    max        = slMax,
-                    step       = slStep,
-                    default    = default,
-                    configPath = configPath,
-                    callback   = callback
-                })
-                if sliderApi and sliderApi.Container then
-                    sliderApi.Container.LayoutOrder = getNextLayoutOrder()
-                end
-                table.insert(self._library._searchRegistry, {label = title, tab = self._tabName, section = self._sectionTitle, kind = "Slider"})
-                return sliderApi
-            end
-
+            
             table.insert(self._sections, SectionObject)
             return SectionObject
         end
