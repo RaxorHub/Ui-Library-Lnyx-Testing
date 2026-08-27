@@ -38,8 +38,6 @@ local colors = {
 }
 
 local windowSize = UDim2.new(0, 420, 0, 280)
-local minWindowSize = Vector2.new(380, 250)
-local maxWindowSize = Vector2.new(800, 600)
 local sidebarWidth = 120
 
 local fontSize = {
@@ -421,21 +419,6 @@ function Library:CreateWindow(config)
         ZIndex = 6
     })
     
-    local resizeHandle = new("TextButton", {
-        Parent = self._win,
-        Size = UDim2.new(0, 16, 0, 16),
-        Position = UDim2.new(1, -16, 1, -16),
-        BackgroundColor3 = colors.bg3,
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Text = "",
-        Font = Enum.Font.GothamBold,
-        TextSize = fontSize.small,
-        TextColor3 = colors.textDim,
-        AutoButtonColor = false,
-        ZIndex = 100
-    })
-    new("UICorner", {Parent = resizeHandle, CornerRadius = UDim.new(0, 5)})
     
     local minimized = false
     local icon = nil
@@ -526,14 +509,6 @@ function Library:CreateWindow(config)
         end
     end)
     
-    local resizing = false
-    local resizeStartPos, resizeStartSize = nil, nil
-    
-    resizeHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            resizing, resizeStartPos, resizeStartSize = true, input.Position, self._win.Size
-        end
-    end)
     
     self:AddConnection("inputChanged", UserInputService.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
@@ -541,19 +516,12 @@ function Library:CreateWindow(config)
                 local delta = input.Position - dragStart
                 self._win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
             end
-            if resizing and resizeStartPos then
-                local delta = input.Position - resizeStartPos
-                local newWidth = math.clamp(resizeStartSize.X.Offset + delta.X, minWindowSize.X, maxWindowSize.X)
-                local newHeight = math.clamp(resizeStartSize.Y.Offset + delta.Y, minWindowSize.Y, maxWindowSize.Y)
-                self._win.Size = UDim2.new(0, newWidth, 0, newHeight)
-            end
         end
     end))
     
     self:AddConnection("inputEnded", UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
-            resizing = false
         end
     end))
     
