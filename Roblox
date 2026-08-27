@@ -23,9 +23,9 @@ local localPlayer = Players.LocalPlayer
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 local colors = {
-    primary = Color3.fromRGB(255, 140, 0),
-    secondary = Color3.fromRGB(147, 112, 219),
-    accent = Color3.fromRGB(186, 85, 211),
+    primary = Color3.fromRGB(138, 78, 215),
+    secondary = Color3.fromRGB(110, 55, 180),
+    accent = Color3.fromRGB(165, 105, 235),
     success = Color3.fromRGB(34, 197, 94),
     bg1 = Color3.fromRGB(18, 18, 18),
     bg2 = Color3.fromRGB(28, 28, 28),
@@ -2409,7 +2409,32 @@ function Library:Window(config)
                 
                 return paragraphObj
             end
-            
+
+            function SectionObject:AddSlider(sliderConfig)
+                sliderConfig = sliderConfig or {}
+                local title    = sliderConfig.Title    or "Slider"
+                local slMin    = sliderConfig.Min      or 0
+                local slMax    = sliderConfig.Max      or 100
+                local slStep   = sliderConfig.Step     or 1
+                local default  = sliderConfig.Default  or slMin
+                local callback = sliderConfig.Callback
+                local noSave   = sliderConfig.NoSave   or false
+                local configPath = noSave and nil or ("Sliders." .. title:gsub("%s+", "_"))
+
+                local sliderApi = self._library:CreateSlider(self._container, title, {
+                    min        = slMin,
+                    max        = slMax,
+                    step       = slStep,
+                    default    = default,
+                    configPath = configPath,
+                    callback   = callback
+                })
+                if sliderApi and sliderApi.Container then
+                    sliderApi.Container.LayoutOrder = getNextLayoutOrder()
+                end
+                return sliderApi
+            end
+
             table.insert(self._sections, SectionObject)
             return SectionObject
         end
