@@ -1657,6 +1657,253 @@ function Library:CreateTextBox(parent, label, placeholder, configPath, defaultVa
     return {Container = container, TextBox = textBox, SetValue = function(v) textBox.Text = tostring(v) lastValue = tostring(v) end}
 end
 
+function Library:CreateSlider(parent, label, config)
+    -- config: { min, max, step, default, configPath, callback }
+    local slMin    = config.min      or 0
+    local slMax    = config.max      or 100
+    local slStep   = config.step     or 1
+    local cfgPath  = config.configPath
+    local callback = config.callback
+
+    local initVal = cfgPath and Library.ConfigSystem.Get(cfgPath, config.default or slMin) or (config.default or slMin)
+    initVal = math.clamp(tonumber(initVal) or slMin, slMin, slMax)
+    local currentValue = initVal
+
+    local container = new("Frame", {
+        Parent = parent,
+        Size = UDim2.new(1, 0, 0, 52),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ZIndex = 7
+    })
+
+    new("TextLabel", {
+        Parent = container,
+        Size = UDim2.new(1, -50, 0, 14),
+        Position = UDim2.new(0, 0, 0, 0),
+        BackgroundTransparency = 1,
+        Text = label,
+        Font = Enum.Font.GothamBold,
+        TextSize = fontSize.small,
+        TextColor3 = colors.text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 8
+    })
+
+    local valueLabel = new("TextLabel", {
+        Parent = container,
+        Size = UDim2.new(0, 50, 0, 14),
+        Position = UDim2.new(1, -50, 0, 0),
+        BackgroundTransparency = 1,
+        Text = tostring(currentValue),
+        Font = Enum.Font.GothamBold,
+        TextSize = fontSize.small,
+        TextColor3 = colors.primary,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        ZIndex = 8
+    })
+
+    local row = new("Frame", {
+        Parent = container,
+        Size = UDim2.new(1, 0, 0, 30),
+        Position = UDim2.new(0, 0, 0, 18),
+        BackgroundTransparency = 1,
+        ZIndex = 7
+    })
+
+    local btnSz = 26
+
+    local minusBtn = new("TextButton", {
+        Parent = row,
+        Size = UDim2.new(0, btnSz, 0, btnSz),
+        Position = UDim2.new(0, 0, 0.5, -btnSz/2),
+        BackgroundColor3 = colors.bg3,
+        BorderSizePixel = 0,
+        Text = "-",
+        Font = Enum.Font.GothamBold,
+        TextSize = 15,
+        TextColor3 = colors.textDim,
+        AutoButtonColor = false,
+        ZIndex = 8
+    })
+    new("UICorner", {Parent = minusBtn, CornerRadius = UDim.new(0, 6)})
+
+    local plusBtn = new("TextButton", {
+        Parent = row,
+        Size = UDim2.new(0, btnSz, 0, btnSz),
+        Position = UDim2.new(1, -btnSz, 0.5, -btnSz/2),
+        BackgroundColor3 = colors.bg3,
+        BorderSizePixel = 0,
+        Text = "+",
+        Font = Enum.Font.GothamBold,
+        TextSize = 15,
+        TextColor3 = colors.textDim,
+        AutoButtonColor = false,
+        ZIndex = 8
+    })
+    new("UICorner", {Parent = plusBtn, CornerRadius = UDim.new(0, 6)})
+
+    local trackBg = new("Frame", {
+        Parent = row,
+        Size = UDim2.new(1, -(btnSz * 2 + 12), 0, 8),
+        Position = UDim2.new(0, btnSz + 6, 0.5, -4),
+        BackgroundColor3 = colors.bg3,
+        BorderSizePixel = 0,
+        ZIndex = 8
+    })
+    new("UICorner", {Parent = trackBg, CornerRadius = UDim.new(1, 0)})
+
+    local trackFill = new("Frame", {
+        Parent = trackBg,
+        Size = UDim2.new(0, 0, 1, 0),
+        BackgroundColor3 = colors.primary,
+        BorderSizePixel = 0,
+        ZIndex = 9
+    })
+    new("UICorner", {Parent = trackFill, CornerRadius = UDim.new(1, 0)})
+
+    local thumb = new("Frame", {
+        Parent = row,
+        Size = UDim2.new(0, 14, 0, 14),
+        BackgroundColor3 = colors.text,
+        BorderSizePixel = 0,
+        ZIndex = 11
+    })
+    new("UICorner", {Parent = thumb, CornerRadius = UDim.new(1, 0)})
+
+    local thumbDot = new("Frame", {
+        Parent = thumb,
+        Size = UDim2.new(0, 6, 0, 6),
+        Position = UDim2.new(0.5, -3, 0.5, -3),
+        BackgroundColor3 = colors.primary,
+        BorderSizePixel = 0,
+        ZIndex = 12
+    })
+    new("UICorner", {Parent = thumbDot, CornerRadius = UDim.new(1, 0)})
+
+    local trackBtn = new("TextButton", {
+        Parent = trackBg,
+        Size = UDim2.new(1, 0, 0, 24),
+        Position = UDim2.new(0, 0, 0.5, -12),
+        BackgroundTransparency = 1,
+        Text = "",
+        ZIndex = 10
+    })
+
+    local function snapVal(v)
+        if slStep > 0 then
+            v = math.round((v - slMin) / slStep) * slStep + slMin
+        end
+        return math.clamp(v, slMin, slMax)
+    end
+
+    local function updateVisual(v, doTween)
+        local pct = (slMax > slMin) and ((v - slMin) / (slMax - slMin)) or 0
+        local trackAbsW = trackBg.AbsoluteSize.X
+        local thumbX = trackBg.AbsolutePosition.X - row.AbsolutePosition.X + pct * trackAbsW - 7
+        local thumbY = trackBg.AbsolutePosition.Y - row.AbsolutePosition.Y + trackBg.AbsoluteSize.Y * 0.5 - 7
+        if doTween then
+            TweenService:Create(trackFill, TweenInfo.new(0.07, Enum.EasingStyle.Quad), {Size = UDim2.new(pct, 0, 1, 0)}):Play()
+            TweenService:Create(thumb, TweenInfo.new(0.07, Enum.EasingStyle.Quad), {Position = UDim2.new(0, thumbX, 0, thumbY)}):Play()
+        else
+            trackFill.Size = UDim2.new(pct, 0, 1, 0)
+            thumb.Position = UDim2.new(0, thumbX, 0, thumbY)
+        end
+        valueLabel.Text = tostring(v)
+    end
+
+    local function setValue(v, fire, doTween)
+        v = snapVal(v)
+        if v == currentValue then return end
+        currentValue = v
+        updateVisual(v, doTween)
+        if cfgPath then
+            Library.ConfigSystem.Set(cfgPath, v)
+            MarkDirty()
+        end
+        if fire and callback then callback(v) end
+    end
+
+    task.defer(function() updateVisual(currentValue, false) end)
+
+    local dragging = false
+
+    local function valueFromInput(input)
+        local rel = (input.Position.X - trackBg.AbsolutePosition.X) / math.max(trackBg.AbsoluteSize.X, 1)
+        return slMin + math.clamp(rel, 0, 1) * (slMax - slMin)
+    end
+
+    trackBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            setValue(valueFromInput(input), true, false)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if not dragging then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+            setValue(valueFromInput(input), true, false)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    local holdThread = nil
+
+    local function startHold(delta)
+        setValue(currentValue + delta, true, true)
+        holdThread = task.spawn(function()
+            task.wait(0.35)
+            while true do
+                setValue(currentValue + delta, true, false)
+                task.wait(0.07)
+            end
+        end)
+    end
+
+    local function stopHold()
+        if holdThread then
+            task.cancel(holdThread)
+            holdThread = nil
+        end
+    end
+
+    minusBtn.MouseButton1Down:Connect(function() startHold(-slStep) end)
+    minusBtn.MouseButton1Up:Connect(stopHold)
+    minusBtn.MouseLeave:Connect(function()
+        stopHold()
+        TweenService:Create(minusBtn, TweenInfo.new(0.1), {TextColor3 = colors.textDim}):Play()
+    end)
+    minusBtn.MouseEnter:Connect(function()
+        TweenService:Create(minusBtn, TweenInfo.new(0.1), {TextColor3 = colors.primary}):Play()
+    end)
+
+    plusBtn.MouseButton1Down:Connect(function() startHold(slStep) end)
+    plusBtn.MouseButton1Up:Connect(stopHold)
+    plusBtn.MouseLeave:Connect(function()
+        stopHold()
+        TweenService:Create(plusBtn, TweenInfo.new(0.1), {TextColor3 = colors.textDim}):Play()
+    end)
+    plusBtn.MouseEnter:Connect(function()
+        TweenService:Create(plusBtn, TweenInfo.new(0.1), {TextColor3 = colors.primary}):Play()
+    end)
+
+    if cfgPath then RegisterCallback(cfgPath, callback, "slider", config.default or slMin) end
+
+    local api = {Container = container}
+    function api:SetValue(v) setValue(v, false, true) end
+    function api:GetValue()  return currentValue end
+    return api
+end
+
 function Library:Initialize()
     ExecuteConfigCallbacks()
     
