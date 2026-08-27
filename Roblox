@@ -2409,7 +2409,32 @@ function Library:Window(config)
                 
                 return paragraphObj
             end
-            
+
+            function SectionObject:AddSlider(sliderConfig)
+                sliderConfig = sliderConfig or {}
+                local title    = sliderConfig.Title    or "Slider"
+                local slMin    = sliderConfig.Min      or 0
+                local slMax    = sliderConfig.Max      or 100
+                local slStep   = sliderConfig.Step     or 1
+                local default  = sliderConfig.Default  or slMin
+                local callback = sliderConfig.Callback
+                local noSave   = sliderConfig.NoSave   or false
+                local configPath = noSave and nil or ("Sliders." .. title:gsub("%s+", "_"))
+
+                local sliderApi = self._library:CreateSlider(self._container, title, {
+                    min        = slMin,
+                    max        = slMax,
+                    step       = slStep,
+                    default    = default,
+                    configPath = configPath,
+                    callback   = callback
+                })
+                if sliderApi and sliderApi.Container then
+                    sliderApi.Container.LayoutOrder = getNextLayoutOrder()
+                end
+                return sliderApi
+            end
+
             table.insert(self._sections, SectionObject)
             return SectionObject
         end
