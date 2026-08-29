@@ -435,7 +435,7 @@ function Library:CreateWindow(config)
             BackgroundColor3 = colors.bg2,
             BackgroundTransparency = 0,
             BorderSizePixel = 0,
-            Image = "rbxassetid://118176705805619",
+            Image = "rbxassetid://123846717606515",
             ScaleType = Enum.ScaleType.Fit,
             AutoButtonColor = false,
             ZIndex = 50
